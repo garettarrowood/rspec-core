@@ -84,9 +84,13 @@ module RSpec
       # @param out [IO] output stream
       def run(err, out)
         setup(err, out)
-        run_specs(@world.ordered_example_groups).tap do
-          persist_example_statuses
-        end
+        run_specs { persist_example_statuses }
+      end
+
+      def load_config(err, out)
+        @configuration.error_stream = err
+        @configuration.output_stream = out if @configuration.output_stream == $stdout
+        @options.configure(@configuration)
       end
 
       # Wires together the various configuration objects and state holders.
@@ -94,20 +98,20 @@ module RSpec
       # @param err [IO] error stream
       # @param out [IO] output stream
       def setup(err, out)
-        @configuration.error_stream = err
-        @configuration.output_stream = out if @configuration.output_stream == $stdout
-        @options.configure(@configuration)
+        load_config(err, out)
         @configuration.load_spec_files
         @world.announce_filters
       end
 
       # Runs the provided example groups.
       #
-      # @param example_groups [Array<RSpec::Core::ExampleGroup>] groups to run
+      # @param example_groups [Array<RSpec::Core::ExampleGroup>] groups to run.
+      #   Defaults to the group registered on `RSpec.world`, in configured
+      #   order.
       # @return [Fixnum] exit status code. 0 if all specs passed,
       #   or the configured failure exit code (1 by default) if specs
       #   failed.
-      def run_specs(example_groups)
+      def run_specs(example_groups=@world.ordered_example_groups)
         examples_count = @world.example_count(example_groups)
         success = @configuration.reporter.report(examples_count) do |reporter|
           @configuration.with_suite_hooks do

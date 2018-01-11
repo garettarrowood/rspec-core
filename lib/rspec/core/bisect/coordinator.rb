@@ -1,5 +1,5 @@
 RSpec::Support.require_rspec_core "bisect/shell_command"
-RSpec::Support.require_rspec_core "bisect/shell_runner"
+RSpec::Support.require_rspec_core "bisect/fork_runner"
 RSpec::Support.require_rspec_core "bisect/example_minimizer"
 RSpec::Support.require_rspec_core "bisect/utilities"
 RSpec::Support.require_rspec_core "formatters/bisect_progress_formatter"
@@ -29,7 +29,7 @@ module RSpec
           @configuration.add_formatter @formatter
 
           reporter.close_after do
-            repro = ShellRunner.start(@shell_command) do |runner|
+            repro = ForkRunner.start(@shell_command) do |runner|
               minimizer = ExampleMinimizer.new(@shell_command, runner, reporter)
 
               gracefully_abort_on_sigint(minimizer)
